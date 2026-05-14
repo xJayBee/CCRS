@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Layout from '../components/Layout';
+import { useAuth } from '../components/AuthContext';
 import styles from '../styles/Home.module.css';
 
 const defaultVenues = [
@@ -46,6 +47,7 @@ const getCapacityValue = (capacityText) => {
 
 export default function FindVenue() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const [venues, setVenues] = useState(defaultVenues);
   const [keyword, setKeyword] = useState('');
   const [capacity, setCapacity] = useState('');
@@ -58,6 +60,16 @@ export default function FindVenue() {
   const [sortBy, setSortBy] = useState('title');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user) {
+    return null;
+  }
 
   // Fetch venues on mount
   useEffect(() => {

@@ -30,7 +30,7 @@ export default function Layout({ children, pageTitle }) {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!authUser && pathname !== '/login' && pathname !== '/' && pathname !== '/register') {
+    if (!authUser && pathname !== '/login' && pathname !== '/register' && pathname !== '/about') {
       router.push('/login');
     }
     if (authUser && (pathname === '/login' || pathname === '/register')) {

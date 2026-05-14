@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '../components/Layout';
+import { useAuth } from '../components/AuthContext';
 import styles from '../styles/Home.module.css';
 
 const feedbackCards = [
@@ -43,11 +45,73 @@ const feedbackCards = [
 const satisfactionLabels = ['Very Unsatisfied', 'Unsatisfied', 'Neutral', 'Satisfied', 'Very Satisfied'];
 
 export default function ProvideFeedback() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [subject, setSubject] = useState('');
   const [feedbackType, setFeedbackType] = useState('');
   const [satisfaction, setSatisfaction] = useState(5);
   const [comments, setComments] = useState('');
   const [allowContact, setAllowContact] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
+
+  if (isLoading || !user) {
+    return null;
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitMessage('');
+    setSubmitError('');
+
+    if (!subject.trim() || !feedbackType || !comments.trim()) {
+      setSubmitError('Please fill in all required fields.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const feedbackData = {
+        subject: subject.trim(),
+        feedbackType,
+        satisfaction,
+        comments: comments.trim(),
+        allowContact,
+        submittedBy: user.email,
+        userRole: user.role,
+        userName: user.name,
+      };
+
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(feedbackData),
+      });
+
+      if (response.ok) {
+        setSubmitMessage('Thank you for your feedback! Your input helps us improve our services.');
+        // Reset form
+        setSubject('');
+        setFeedbackType('');
+        setSatisfaction(5);
+        setComments('');
+        setAllowContact(false);
+      } else {
+        const errorData = await response.json();
+        setSubmitError(errorData.error || 'Failed to submit feedback. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setSubmitError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Layout pageTitle="Provide Feedback">
@@ -61,19 +125,20 @@ export default function ProvideFeedback() {
               </div>
             </div>
 
-            <form className={styles.feedbackForm}>
+            <form className={styles.feedbackForm} onSubmit={handleSubmit}>
               <label className={styles.formField}>
-                <span>Feedback Subject</span>
+                <span>Feedback Subject *</span>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Briefly describe your feedback topic"
+                  required
                 />
               </label>
               <label className={styles.formField}>
-                <span>Feedback Type</span>
-                <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)}>
+                <span>Feedback Type *</span>
+                <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)} required>
                   <option value="">Select a feedback category</option>
                   <option value="Platform Feature">Platform Feature</option>
                   <option value="Reporting Process">Reporting Process</option>
@@ -100,12 +165,13 @@ export default function ProvideFeedback() {
                 </div>
               </label>
               <label className={styles.formField}>
-                <span>Your Comments</span>
+                <span>Your Comments *</span>
                 <textarea
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
                   placeholder="Share details, suggestions, or concerns that will help us improve."
                   rows="5"
+                  required
                 />
               </label>
               <label className={styles.checkboxField}>
@@ -116,8 +182,21 @@ export default function ProvideFeedback() {
                 />
                 Allow us to contact you for clarification.
               </label>
-              <button type="button" className={styles.primaryButton} style={{ width: '100%' }}>
-                Submit Feedback
+
+              {submitError && (
+                <div style={{ color: '#dc2626', marginBottom: '16px', padding: '12px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                  ⚠️ {submitError}
+                </div>
+              )}
+
+              {submitMessage && (
+                <div style={{ color: '#16a34a', marginBottom: '16px', padding: '12px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  ✓ {submitMessage}
+                </div>
+              )}
+
+              <button type="submit" className={styles.primaryButton} style={{ width: '100%' }} disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
               </button>
             </form>
           </section>

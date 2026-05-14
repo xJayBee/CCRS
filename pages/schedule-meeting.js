@@ -9,6 +9,9 @@ const monthOptions = ['October 2025', 'November 2025', 'December 2025', 'January
 const calendarDays = Array.from({ length: 31 }, (_, index) => index + 1);
 
 export default function ScheduleMeeting() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeMonth, setActiveMonth] = useState(monthOptions[0]);
   const [selectedDay, setSelectedDay] = useState(30);
   const [selectedSlot, setSelectedSlot] = useState('09:00 AM');
@@ -23,10 +26,6 @@ export default function ScheduleMeeting() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
-
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const currentMonthIndex = monthOptions.indexOf(activeMonth);
   
   const handlePrevMonth = () => setActiveMonth(monthOptions[(currentMonthIndex + monthOptions.length - 1) % monthOptions.length]);

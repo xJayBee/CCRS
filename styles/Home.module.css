@@ -56,7 +56,21 @@
   margin-right: 0;
 }
 
-.sidebarCollapsed .activeIndicator {
+.sidebarCollapsed .sectionTitle,
+.sidebarCollapsed .sectionToggle {
+  display: none;
+}
+
+.sidebarCollapsed .sectionHeader {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebarCollapsed .navGroup {
+  display: none;
+}
+
+.sidebarCollapsed .quickActions {
   display: none;
 }
 
@@ -205,6 +219,81 @@
 
 .activeIndicator {
   display: none;
+}
+
+.navGroup {
+  display: grid;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.sectionIcon {
+  font-size: 1rem;
+  margin-right: 8px;
+}
+
+.sectionTitle {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.sectionToggle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.sectionHeaderActive .sectionTitle {
+  color: #60a5fa;
+}
+
+.sectionHeaderActive .sectionToggle {
+  color: #60a5fa;
+}
+
+.quickActions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 232, 255, 0.1);
+}
+
+.quickActionList {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quickAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: #dbeafe;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  font-size: 0.9rem;
+  text-align: left;
+  width: 100%;
+}
+
+.quickAction:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(2px);
+}
+
+.quickActionIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.quickActionLabel {
+  flex: 1;
+  font-weight: 500;
 }
 
 .sidebarFooter {

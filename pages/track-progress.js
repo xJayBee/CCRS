@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '../components/Layout';
+import { useAuth } from '../components/AuthContext';
 import styles from '../styles/Home.module.css';
 
 export default function TrackProgress() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [conflicts, setConflicts] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -12,7 +16,17 @@ export default function TrackProgress() {
     resolved: 0,
     avgDays: 0,
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user) {
+    return null;
+  }
 
   useEffect(() => {
     fetchConflicts();
@@ -41,7 +55,7 @@ export default function TrackProgress() {
     } catch (error) {
       console.error('Error fetching conflicts:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingData(false);
     }
   };
 
@@ -183,7 +197,7 @@ export default function TrackProgress() {
             <div className={styles.chartCard}>
               <div className={styles.cardTitle}>Recent Conflict Updates</div>
               <p>Latest status changes and updates on conflicts.</p>
-              {isLoading ? (
+              {isLoadingData ? (
                 <p>Loading...</p>
               ) : recentUpdates.length > 0 ? (
                 <div className={styles.tableWrapper}>

@@ -54,3 +54,4 @@ Thumbs.db
 # /data/users.json
 # /data/conflicts.json
 .vercel
+.env*.local

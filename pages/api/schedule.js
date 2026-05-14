@@ -1,4 +1,5 @@
 import { getAuthTokenFromHeaders, parseToken } from '../../lib/auth';
+import { createMeetingServer, getMeetingsServer } from '../../lib/firestore';
 
 export default async function handler(req, res) {
   try {
@@ -21,7 +22,6 @@ export default async function handler(req, res) {
 
       // Create meeting object
       const meeting = {
-        id: `MTNG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         title,
         date,
         time,
@@ -31,22 +31,33 @@ export default async function handler(req, res) {
         notes: notes || '',
         reportId,
         scheduledBy: user.email,
-        createdAt: new Date().toISOString(),
         status: 'Scheduled',
       };
 
-      // In a real application, you would save this to a database
-      // For now, we'll return success
-      return res.status(201).json({
-        message: 'Meeting scheduled successfully',
-        meeting: meeting,
-      });
+      try {
+        const savedMeeting = await createMeetingServer(meeting);
+        return res.status(201).json({
+          message: 'Meeting scheduled successfully',
+          meeting: savedMeeting,
+        });
+      } catch (error) {
+        console.error('Error saving meeting:', error);
+        return res.status(500).json({ error: 'Failed to save meeting to database' });
+      }
     }
 
     if (req.method === 'GET') {
-      // Fetch scheduled meetings
-      // This would query a database in a real application
-      return res.status(200).json([]);
+      try {
+        const filters = {};
+        if (req.query.reportId) filters.reportId = req.query.reportId;
+        if (req.query.status) filters.status = req.query.status;
+
+        const meetings = await getMeetingsServer(filters);
+        return res.status(200).json(meetings);
+      } catch (error) {
+        console.error('Error fetching meetings:', error);
+        return res.status(500).json({ error: 'Failed to fetch meetings' });
+      }
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

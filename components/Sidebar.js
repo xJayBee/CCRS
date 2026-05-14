@@ -2,30 +2,47 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import styles from '../styles/Home.module.css';
 
 const mainNavItems = [
   { href: '/', label: 'Dashboard', icon: '🏠', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
+];
+
+const clientNavItems = [
   { href: '/report-conflict', label: 'Report Conflict', icon: '📋', allowedRoles: ['client'] },
   { href: '/my-reports', label: 'My Reports', icon: '📄', allowedRoles: ['client'] },
+];
+
+const managementNavItems = [
   { href: '/manage-reports', label: 'Manage Reports', icon: '📝', allowedRoles: ['admin', 'staff'] },
   { href: '/manage-venues', label: 'Manage Venues', icon: '🏢', allowedRoles: ['admin', 'mediator', 'staff'] },
-  { href: '/find-venue', label: 'Find Venue', icon: '🔍', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
-  { href: '/track-progress', label: 'Track Progress', icon: '📈', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
   { href: '/assign-mediator', label: 'Assign Mediator', icon: '👤', allowedRoles: ['admin', 'mediator', 'staff'] },
   { href: '/schedule-meeting', label: 'Schedule Meeting', icon: '📅', allowedRoles: ['admin', 'mediator', 'staff'] },
   { href: '/resolve-conflict', label: 'Resolve Conflict', icon: '✓', allowedRoles: ['admin', 'mediator', 'staff'] },
 ];
 
+const toolsNavItems = [
+  { href: '/find-venue', label: 'Find Venue', icon: '🔍', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
+  { href: '/track-progress', label: 'Track Progress', icon: '📈', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
+];
+
 export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('sidebarCollapsed') === 'true';
     }
     return false;
+  });
+  const [collapsedSections, setCollapsedSections] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsedSections');
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
   });
 
   const handleToggleCollapse = (current) => {
@@ -35,11 +52,26 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
       localStorage.setItem('sidebarCollapsed', newState);
     }
   };
+
+  const handleToggleSection = (sectionKey) => {
+    setCollapsedSections((prev) => {
+      const newState = { ...prev, [sectionKey]: !prev[sectionKey] };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebarCollapsedSections', JSON.stringify(newState));
+      }
+      return newState;
+    });
+  };
   const { user } = useAuth();
 
   const currentUser = user || { name: 'Guest', role: 'visitor' };
 
-  const visibleNavItems = mainNavItems.filter((item) => item.allowedRoles.includes(currentUser.role));
+  const filterItemsByRole = (items) => items.filter((item) => item.allowedRoles.includes(currentUser.role));
+
+  const visibleMainItems = filterItemsByRole(mainNavItems);
+  const visibleClientItems = filterItemsByRole(clientNavItems);
+  const visibleManagementItems = filterItemsByRole(managementNavItems);
+  const visibleToolsItems = filterItemsByRole(toolsNavItems);
 
   const handleReportConflictClick = () => {
     if (currentUser.role !== 'client') {
@@ -62,9 +94,63 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
     }
   };
 
+  const NavSection = ({ title, items, sectionKey, icon }) => {
+    const hasItems = items.length > 0;
+    const isSectionCollapsed = collapsedSections[sectionKey];
+    const isActive = items.some((item) => pathname === item.href);
+
+    if (!hasItems) return null;
+
+    return (
+      <div className={styles.navSection}>
+        <button
+          type="button"
+          className={`${styles.sectionHeader} ${isActive ? styles.sectionHeaderActive : ''}`}
+          onClick={() => handleToggleSection(sectionKey)}
+          aria-expanded={!isSectionCollapsed}
+        >
+          <span className={styles.sectionIcon}>{icon}</span>
+          <span className={styles.sectionTitle}>{title}</span>
+          <span className={styles.sectionToggle}>
+            {isSectionCollapsed ? '▶' : '▼'}
+          </span>
+        </button>
+        {!isSectionCollapsed && (
+          <nav className={styles.navGroup}>
+            {items.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                  title={item.label}
+                  onClick={() => handleNavItemClick(item)}
+                >
+                  <span className={styles.navIcon}>{item.icon}</span>
+                  <span className={styles.navLabel}>{item.label}</span>
+                  {isActive && <span className={styles.activeIndicator} />}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+      </div>
+    );
+  };
+
   const footerItems = [
     { href: '/about', label: 'About' },
   ];
+
+  const quickActions = [
+    { label: 'New Report', icon: '📋', action: () => handleReportConflictClick(), allowedRoles: ['client'] },
+    { label: 'Schedule Meeting', icon: '📅', href: '/schedule-meeting', allowedRoles: ['admin', 'mediator', 'staff'] },
+    { label: 'Find Venue', icon: '🔍', href: '/find-venue', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
+  ];
+
+  const visibleQuickActions = quickActions.filter((action) => action.allowedRoles.includes(currentUser.role));
 
   return (
     <aside
@@ -102,24 +188,38 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
         </div>
 
         <nav className={styles.sidebarNav}>
-          {visibleNavItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}
-                aria-current={isActive ? 'page' : undefined}
-                title={item.label}
-                onClick={() => handleNavItemClick(item)}
-              >
-                <span className={styles.navIcon}>{item.icon}</span>
-                <span className={styles.navLabel}>{item.label}</span>
-                {isActive && <span className={styles.activeIndicator} />}
-              </Link>
-            );
-          })}
+          <NavSection title="Main" items={visibleMainItems} sectionKey="main" icon="📊" />
+          <NavSection title="Client Actions" items={visibleClientItems} sectionKey="client" icon="👥" />
+          <NavSection title="Management" items={visibleManagementItems} sectionKey="management" icon="⚙️" />
+          <NavSection title="Tools" items={visibleToolsItems} sectionKey="tools" icon="🛠️" />
         </nav>
+
+        {visibleQuickActions.length > 0 && (
+          <div className={styles.quickActions}>
+            <p className={styles.sectionTitle}>Quick Actions</p>
+            <div className={styles.quickActionList}>
+              {visibleQuickActions.map((action, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className={styles.quickAction}
+                  onClick={() => {
+                    if (action.href) {
+                      if (onCloseMobileSidebar) onCloseMobileSidebar();
+                      router.push(action.href);
+                    } else if (action.action) {
+                      action.action();
+                    }
+                  }}
+                  title={action.label}
+                >
+                  <span className={styles.quickActionIcon}>{action.icon}</span>
+                  <span className={styles.quickActionLabel}>{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className={styles.sidebarFooter}>
