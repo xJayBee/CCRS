@@ -1,9 +1,9 @@
 import {
-  getAssignments,
-  createAssignment,
-  updateAssignment,
-  getAssignmentById,
-  deleteAssignment,
+  getAssignmentsServer,
+  createAssignmentServer,
+  updateAssignmentServer,
+  getAssignmentByIdServer,
+  deleteAssignmentServer,
 } from '../../lib/firestore';
 import { getAuthTokenFromHeaders, parseToken } from '../../lib/auth';
 
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       if (mediatorId) filters.mediatorId = mediatorId;
       if (status) filters.status = status;
 
-      const assignments = await getAssignments(filters);
+      const assignments = await getAssignmentsServer(filters);
       return res.status(200).json(assignments);
     }
 
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
         assignedAt: new Date().toISOString(),
       };
 
-      const assignment = await createAssignment(newAssignment);
+      const assignment = await createAssignmentServer(newAssignment);
       return res.status(201).json({ message: 'Mediator assigned successfully', assignment });
     }
 
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Assignment ID is required.' });
       }
 
-      const existingAssignment = await getAssignmentById(id);
+      const existingAssignment = await getAssignmentByIdServer(id);
       if (!existingAssignment) {
         return res.status(404).json({ error: 'Assignment not found.' });
       }
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         notes: notes !== undefined ? notes : existingAssignment.notes,
       };
 
-      const assignment = await updateAssignment(id, updatedAssignment);
+      const assignment = await updateAssignmentServer(id, updatedAssignment);
       return res.status(200).json({ message: 'Assignment updated successfully', assignment });
     }
 
@@ -104,12 +104,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Assignment ID is required.' });
       }
 
-      const existingAssignment = await getAssignmentById(id);
+      const existingAssignment = await getAssignmentByIdServer(id);
       if (!existingAssignment) {
         return res.status(404).json({ error: 'Assignment not found.' });
       }
 
-      await deleteAssignment(id);
+      await deleteAssignmentServer(id);
       return res.status(200).json({ message: 'Assignment deleted successfully', id });
     }
 
