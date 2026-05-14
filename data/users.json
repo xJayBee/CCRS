@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "email": "admin@elupun.com",
+    "name": "Admin User",
+    "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "email": "mediator@elupun.com",
+    "name": "Mediator User",
+    "password": "0769b29881fb86924004b03776aedd13f565f106df29962f83fe82670d6951c8",
+    "role": "mediator"
+  },
+  {
+    "id": 3,
+    "email": "staff@elupun.com",
+    "name": "Support Staff",
+    "password": "10176e7b7b24d317acfcf8d2064cfd2f24e154f7b5a96603077d5ef813d6a6b6",
+    "role": "staff"
+  }
+]
