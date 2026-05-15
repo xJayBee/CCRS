@@ -77,18 +77,13 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
     }
   };
 
-  const NavSection = ({ title, items, sectionKey, icon }) => {
+  const NavSection = ({ items }) => {
     const hasItems = items.length > 0;
-    const isActive = items.some((item) => pathname === item.href);
 
     if (!hasItems) return null;
 
     return (
       <div className={styles.navSection}>
-        <div className={`${styles.sectionHeader} ${isActive ? styles.sectionHeaderActive : ''}`}>
-          <span className={styles.sectionIcon}>{icon}</span>
-          <span className={styles.sectionTitle}>{title}</span>
-        </div>
         <nav className={styles.navGroup}>
           {items.map((item) => {
             const isActiveItem = pathname === item.href;
@@ -160,10 +155,10 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
         </div>
 
         <nav className={styles.sidebarNav}>
-          <NavSection title="Main" items={visibleMainItems} sectionKey="main" icon="📊" />
-          <NavSection title="Client Actions" items={visibleClientItems} sectionKey="client" icon="👥" />
-          <NavSection title="Management" items={visibleManagementItems} sectionKey="management" icon="⚙️" />
-          <NavSection title="Tools" items={visibleToolsItems} sectionKey="tools" icon="🛠️" />
+          <NavSection items={visibleMainItems} />
+          <NavSection items={visibleClientItems} />
+          <NavSection items={visibleManagementItems} />
+          <NavSection items={visibleToolsItems} />
         </nav>
 
         {visibleQuickActions.length > 0 && (
