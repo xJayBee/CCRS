@@ -37,13 +37,6 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
     }
     return false;
   });
-  const [collapsedSections, setCollapsedSections] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarCollapsedSections');
-      return saved ? JSON.parse(saved) : {};
-    }
-    return {};
-  });
 
   const handleToggleCollapse = (current) => {
     const newState = !current;
@@ -51,16 +44,6 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('sidebarCollapsed', newState);
     }
-  };
-
-  const handleToggleSection = (sectionKey) => {
-    setCollapsedSections((prev) => {
-      const newState = { ...prev, [sectionKey]: !prev[sectionKey] };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sidebarCollapsedSections', JSON.stringify(newState));
-      }
-      return newState;
-    });
   };
   const { user } = useAuth();
 
@@ -96,46 +79,35 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
 
   const NavSection = ({ title, items, sectionKey, icon }) => {
     const hasItems = items.length > 0;
-    const isSectionCollapsed = collapsedSections[sectionKey];
     const isActive = items.some((item) => pathname === item.href);
 
     if (!hasItems) return null;
 
     return (
       <div className={styles.navSection}>
-        <button
-          type="button"
-          className={`${styles.sectionHeader} ${isActive ? styles.sectionHeaderActive : ''}`}
-          onClick={() => handleToggleSection(sectionKey)}
-          aria-expanded={!isSectionCollapsed}
-        >
+        <div className={`${styles.sectionHeader} ${isActive ? styles.sectionHeaderActive : ''}`}>
           <span className={styles.sectionIcon}>{icon}</span>
           <span className={styles.sectionTitle}>{title}</span>
-          <span className={styles.sectionToggle}>
-            {isSectionCollapsed ? '▶' : '▼'}
-          </span>
-        </button>
-        {!isSectionCollapsed && (
-          <nav className={styles.navGroup}>
-            {items.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${styles.navLink} ${isActive ? styles.navLinkActive : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                  title={item.label}
-                  onClick={() => handleNavItemClick(item)}
-                >
-                  <span className={styles.navIcon}>{item.icon}</span>
-                  <span className={styles.navLabel}>{item.label}</span>
-                  {isActive && <span className={styles.activeIndicator} />}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
+        </div>
+        <nav className={styles.navGroup}>
+          {items.map((item) => {
+            const isActiveItem = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.navLink} ${isActiveItem ? styles.navLinkActive : ''}`}
+                aria-current={isActiveItem ? 'page' : undefined}
+                title={item.label}
+                onClick={() => handleNavItemClick(item)}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navLabel}>{item.label}</span>
+                {isActiveItem && <span className={styles.activeIndicator} />}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     );
   };
