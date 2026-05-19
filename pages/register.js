@@ -8,7 +8,7 @@ import { useAuth } from '../components/AuthContext';
 
 export default function Register() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,28 +31,19 @@ export default function Register() {
     }
 
     setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
+    const result = await register({ name: name.trim(), email: email.trim(), password });
+    setIsSubmitting(false);
 
-      const result = await response.json();
-      if (!response.ok) {
-        setStatus(result.error || 'Unable to register account.');
-      } else {
-        setStatus('Registration successful. You can now sign in.');
-        setName('');
-        setEmail('');
-        setPassword('');
-        setTimeout(() => router.push('/login'), 1200);
-      }
-    } catch (error) {
-      setStatus('Unable to connect to the server.');
-    } finally {
-      setIsSubmitting(false);
+    if (!result.success) {
+      setStatus(result.error || 'Unable to register account.');
+      return;
     }
+
+    setStatus('Registration successful. Redirecting to sign in...');
+    setName('');
+    setEmail('');
+    setPassword('');
+    setTimeout(() => router.push('/login'), 1200);
   };
 
   if (!isLoading && user) {
@@ -62,59 +53,86 @@ export default function Register() {
   return (
     <div className={styles.authShell}>
       <div className={styles.authCard}>
-        <h1 className={styles.authTitle}>Register as a client</h1>
-        <p className={styles.authSubtitle}>
-          Create your client account to request mediation support and track conflict resolution progress.
-        </p>
-        <form className={styles.formGrid} onSubmit={handleSubmit}>
-          <label className={styles.formField}>
-            <span>Full name</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Doe"
-              disabled={isSubmitting}
-              required
-            />
-          </label>
-          <label className={styles.formField}>
-            <span>Email address</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
-              disabled={isSubmitting}
-              required
-            />
-          </label>
-          <label className={styles.formField}>
-            <span>Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a secure password"
-              disabled={isSubmitting}
-              required
-            />
-          </label>
-          <div className={styles.authActions}>
-            <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
-              {isSubmitting ? 'Registering…' : 'Register'}
-            </button>
-          </div>
-          {status && <div className={styles.statusMessage}>{status}</div>}
-          <div className={styles.authFooter}>
-            <p>
-              Already have an account?{' '}
-              <Link href="/login" className={styles.linkButton}>
-                Sign in
-              </Link>
+        <div className={styles.authPanelLeft}>
+          <div>
+            <div className={styles.heroBadge}>CCRS</div>
+            <h1 className={styles.heroTitle}>Community Conflict Resolution System</h1>
+            <p className={styles.heroSubtitle}>
+              Register quickly to request mediation support and manage conflict progress.
             </p>
           </div>
-        </form>
+          <p className={styles.heroNote}>
+            Create a client account with a strong password and use the portal to resolve community disputes safely.
+          </p>
+        </div>
+
+        <div className={styles.authPanelRight}>
+          <div className={styles.formHeader}>
+            <p className={styles.formIntro}>Create account</p>
+            <h2 className={styles.formTitle}>Register your client account</h2>
+          </div>
+
+          <form className={styles.authFormInner} onSubmit={handleSubmit}>
+            <label className={styles.formField}>
+              <span className={styles.inputLabel}>Full name</span>
+              <div className={styles.inputWrap}>
+                <span className={styles.fieldIcon}>👤</span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Jane Doe"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            </label>
+
+            <label className={styles.formField}>
+              <span className={styles.inputLabel}>Email address</span>
+              <div className={styles.inputWrap}>
+                <span className={styles.fieldIcon}>📧</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            </label>
+
+            <label className={styles.formField}>
+              <span className={styles.inputLabel}>Password</span>
+              <div className={styles.inputWrap}>
+                <span className={styles.fieldIcon}>🔒</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Choose a secure password"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            </label>
+
+            <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+              {isSubmitting ? 'Registering…' : 'Create account'}
+            </button>
+
+            {status && (
+              <div className={styles.statusMessage} role="status" aria-live="polite">
+                {status}
+              </div>
+            )}
+
+            <p className={styles.authBottom}>
+              Already have an account? <Link href="/login">Sign in</Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

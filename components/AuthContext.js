@@ -9,6 +9,7 @@ const AuthContext = createContext({
   error: null,
   signIn: async () => {},
   signOut: async () => {},
+  register: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -78,6 +79,30 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const register = async ({ name, email, password }) => {
+    setError(null);
+
+    try {
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Unable to register.');
+        return { success: false, error: data.error || 'Unable to register.' };
+      }
+
+      return { success: true, user: data.user };
+    } catch (fetchError) {
+      console.error('Register fetch error:', fetchError?.message || fetchError);
+      setError('Unable to connect to the server.');
+      return { success: false, error: 'Unable to connect to the server.' };
+    }
+  };
+
   const signOut = async () => {
     try {
       await fetch('/api/auth', {
@@ -99,6 +124,7 @@ export function AuthProvider({ children }) {
       error,
       signIn,
       signOut,
+      register,
     }),
     [user, isLoading, error]
   );

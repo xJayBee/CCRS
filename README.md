@@ -1,158 +1,387 @@
-# E-Lupon Community Conflict Resolution System
+﻿# E-Lupon Community Conflict Resolution System
 
-A Next.js 14 application for managing community conflict resolution workflows, venues, mediators, and case tracking.
+Welcome to the consolidated documentation for the CCRS project. This single file contains the complete setup, architecture, deployment, API, and troubleshooting information for the system.
 
-## 🚀 Live Demo
+---
 
-**Deployed on Vercel:** [Your Live URL Here]
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Tech Stack](#tech-stack)
+4. [Prerequisites](#prerequisites)
+5. [Installation & Setup](#installation--setup)
+6. [Firebase Setup](#firebase-setup)
+7. [Firestore Security Rules](#firestore-security-rules)
+8. [Authentication & Security](#authentication--security)
+9. [Deployment](#deployment)
+10. [Deployment Checklist](#deployment-checklist)
+11. [API Reference](#api-reference)
+12. [CRUD Operations](#crud-operations)
+13. [Project Structure](#project-structure)
+14. [Troubleshooting](#troubleshooting)
+15. [Demo Credentials](#demo-credentials)
+16. [Contributing](#contributing)
+17. [License](#license)
+
+---
+
+## Project Overview
+
+The E-Lupon Community Conflict Resolution System is a Next.js 14 application built to support community conflict reporting, mediation, venue management, and case tracking. It provides role-based access for administrators, mediators, and staff, backed by Firebase Firestore.
+
+### Objectives
+
+- Digitize conflict resolution workflows
+- Improve accessibility for community members
+- Enhance transparency with status tracking
+- Facilitate mediation and venue scheduling
+- Maintain secure, auditable records
+
+### Core System Capabilities
+
+- Online conflict reporting
+- Case management and status updates
+- Venue creation and scheduling
+- User and role management
+- Feedback collection
+- Admin dashboards and notifications
+
+---
 
 ## Features
 
-- **Authentication & Authorization**
-  - Secure HttpOnly cookie-based auth sessions
-  - SHA-256 password hashing
-  - Role-based access control (Admin, Mediator, Staff)
-  - Server-side route protection via middleware
-  - Client-side auth context for seamless UX
+- Secure authentication with HttpOnly cookie sessions
+- Role-based access control (admin, mediator, staff)
+- Firebase Firestore persistence
+- Responsive UI with sidebar navigation
+- Form validation, loading states, and status messaging
+- Full CRUD support for venues, conflicts, users, and assignments
+- Vercel deployment-ready configuration
 
-- **Core Workflows**
-  - Report and track conflict cases
-  - Manage mediators and assignments
-  - Venue booking and scheduling
-  - Progress tracking and feedback
+---
 
-- **UI/UX**
-  - Responsive sidebar navigation with collapsible sections
-  - Real-time notifications dashboard
-  - Loading skeletons during auth validation
-  - Login page with demo credentials
-  - Logout confirmation dialog
-  - Role-specific dashboard summaries
+## Tech Stack
 
-- **Cloud Backend**
-  - Firebase Firestore for data persistence
-  - Real-time data synchronization
-  - Scalable cloud infrastructure
+- Frontend: Next.js 14, React 18
+- Backend: Firebase Firestore
+- Authentication: custom auth with HttpOnly cookies
+- Styling: CSS Modules and global CSS
+- Deployment: Vercel
+- Runtime: Node.js 18+
 
-## Getting Started
+---
 
-### Prerequisites
+## Prerequisites
 
-- Node.js 18+
-- npm 9+
-- Firebase account (for cloud backend)
+- Node.js 18 or higher
+- npm 9 or higher
+- Firebase account and project
+- Modern browser (Chrome, Firefox, Edge, Safari)
 
-### Installation
+---
 
-1. **Clone or download the project**
-   ```bash
-   cd "c:\ccrs new project"
-   ```
+## Installation & Setup
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 1. Clone the project
 
-3. **Set up Firebase backend**
-   ```bash
-   # Follow FIREBASE_SETUP.md for complete instructions
-   cp .env.local.example .env.local
-   # Edit .env.local with your Firebase configuration
-   ```
+```powershell
+cd "c:\ccrs new project"
+```
 
-4. **Run development server**
-   ```bash
-   npm run dev
-   ```
+### 2. Install dependencies
 
-5. **Open in browser**
-   ```
-   http://localhost:3000
-   ```
+```bash
+npm install
+```
+
+### 3. Create environment file
+
+```bash
+cp .env.local.example .env.local
+```
+
+### 4. Update `.env.local`
+
+Fill in Firebase configuration values from your Firebase project settings.
+
+### 5. Start development server
+
+```bash
+npm run dev
+```
+
+### 6. Open browser
+
+```
+http://localhost:3000
+```
+
+---
+
+## Firebase Setup
+
+### Create a Firebase project
+
+1. Go to https://console.firebase.google.com
+2. Create a new project
+3. Add a Web app
+4. Copy the Firebase config object
+
+### Add Firebase config to `.env.local`
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123:web:abcdef
+```
+
+### Set up Firestore
+
+1. Open Firestore Database in Firebase Console
+2. Click **Create database**
+3. Choose **Start in test mode** for development
+4. Select your region and enable the database
+
+### Collections created automatically
+
+- `venues`
+- `conflicts`
+- `users`
+- `assignments`
+
+---
+
+## Firestore Security Rules
+
+Use the following rules in production once Firebase is configured:
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{document=**} {
+      allow read, create, update: if true;
+    }
+
+    match /venues/{document=**} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    match /conflicts/{document=**} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (request.auth.token.role == 'admin' || resource.data.createdBy == request.auth.token.email);
+    }
+
+    match /assignments/{document=**} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && (request.auth.token.role == 'admin' || request.auth.token.role == 'mediator');
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+> **Note:** The current root rule for `/users` allows open access for development. Update this before production.
+
+---
+
+## Authentication & Security
+
+### Authentication Flow
+
+1. User submits login credentials
+2. Server validates hashed password and user record
+3. Successful login returns a secure auth cookie
+4. Client `AuthContext` validates session with `/api/auth`
+5. Protected routes are enforced by middleware
+
+### Session Validation
+
+- `GET /api/auth` — verify auth token
+- `POST /api/auth` — login
+- `DELETE /api/auth` — logout
+
+### Authentication Fix Summary
+
+The backend is updated so auth requests use server-side Firestore access and can avoid `500` errors. If Firebase Admin SDK is configured, secure admin-level reads are used. Otherwise the app can still run in development with permissive Firestore rules.
+
+---
 
 ## Deployment
 
-### Quick Deploy to Vercel
+### Vercel Setup
 
-1. **Install Vercel CLI**
-   ```bash
-   npm install -g vercel
-   ```
+#### Install Vercel CLI
 
-2. **Deploy**
-   ```bash
-   npm run deploy
-   ```
+```bash
+npm install -g vercel
+```
 
-3. **Configure environment variables** in Vercel dashboard
+#### Deploy with CLI
 
-See `VERCEL_DEPLOYMENT.md` for detailed instructions.
+```bash
+vercel
+vercel --prod
+```
 
-### Demo Credentials
+#### Deploy with the Vercel dashboard
 
-- **Admin**: admin@example.com / admin123
-- **Mediator**: mediator@example.com / mediator123
-- **Staff**: staff@example.com / staff123
+1. Go to https://vercel.com
+2. Click **New Project**
+3. Import your repository
+4. Set the framework to **Next.js**
+5. Use `./` as the root directory
+6. Confirm build command: `npm run build`
+7. Add environment variables
+
+### Environment Variables on Vercel
+
+Set the same Firebase values used locally:
+
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+
+### Redeploy and verify
+
+- Save environment variables
+- Trigger a redeploy
+- Test the live site after deployment
+
+---
+
+## Deployment Checklist
+
+### Pre-Deployment
+
+- [ ] Firebase project created
+- [ ] Firestore enabled
+- [ ] `.env.local` configured
+- [ ] Application builds successfully
+- [ ] Sensitive data removed from Git
+
+### Deployment
+
+- [ ] Vercel project created
+- [ ] Environment variables configured
+- [ ] Project deployed
+- [ ] Live URL verified
+
+### Verification
+
+- [ ] Login works
+- [ ] Venue CRUD works
+- [ ] Conflict reporting works
+- [ ] User management works
+- [ ] Firestore persists data
+- [ ] No browser console errors
+
+---
+
+## API Reference
+
+### Venues API
+
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/api/venues` | List all venues | Optional |
+| POST | `/api/venues` | Create venue | Required |
+| PATCH | `/api/venues` | Update venue | Required |
+| DELETE | `/api/venues` | Delete venue | Required |
+
+### Conflicts API
+
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/api/conflicts` | List conflicts | Required |
+| POST | `/api/conflicts` | Create conflict | Required |
+| PATCH | `/api/conflicts` | Update conflict | Admin only |
+| DELETE | `/api/conflicts` | Delete conflict | Admin only |
+
+### Users API
+
+| Method | Endpoint | Purpose | Auth |
+|--------|----------|---------|------|
+| GET | `/api/users` | List users | Admin only |
+| POST | `/api/users` | Create user | Admin only |
+| PATCH | `/api/users` | Update user | Admin only |
+| DELETE | `/api/users` | Delete user | Admin only |
+
+### Auth API
+
+- `POST /api/auth` — Login
+- `GET /api/auth` — Session verification
+- `DELETE /api/auth` — Logout
+
+---
+
+## CRUD Operations
+
+- Venues: create, read, update, delete
+- Conflicts: create, read, update, delete
+- Users: create, read, update, delete
+- Assignments: create, read, update, delete
+
+This project supports complete CRUD workflows across its core resources.
+
+---
 
 ## Project Structure
 
 ```
-├── components/          # React components
-├── lib/                # Utility functions and Firebase setup
-├── pages/              # Next.js pages and API routes
-├── styles/             # CSS styles
-├── data/               # Sample data (local development)
-├── FIREBASE_SETUP.md   # Firebase configuration guide
-├── VERCEL_DEPLOYMENT.md # Deployment instructions
-└── DEPLOYMENT_CHECKLIST.md # Deployment checklist
+├── components/           # React components
+├── pages/                # Next.js pages and API routes
+├── styles/               # UI and layout styling
+├── lib/                  # Firebase, auth, and utility helpers
+├── data/                 # Sample local data
+├── public/               # Static assets
+├── .env.local.example    # Environment variable template
+├── package.json          # Scripts and dependencies
+├── middleware.js         # Route protection and auth middleware
+└── README.md             # Consolidated documentation
 ```
 
-## Tech Stack
+---
 
-- **Frontend**: Next.js 14, React 18
-- **Backend**: Firebase Firestore
-- **Authentication**: Custom JWT with HttpOnly cookies
-- **Styling**: CSS Modules
-- **Deployment**: Vercel
-- **Database**: Firebase Firestore (NoSQL)
+## Troubleshooting
 
-## API Endpoints
+### Unable to connect to the server
 
-- `GET/POST/PATCH/DELETE /api/venues` - Venue management
-- `GET/POST/PATCH/DELETE /api/conflicts` - Conflict reports
-- `GET/POST/PATCH/DELETE /api/users` - User management
-- `POST /api/auth` - Authentication
+- Verify Firebase environment variables
+- Restart the development server after updating `.env.local`
+- Check browser console and server logs
 
-## Contributing
+### Authentication 500 errors
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- Confirm Firebase Admin SDK configuration if used
+- For development, allow permissive Firestore rules until secure setup is complete
 
-## License
+### Vercel build errors
 
-This project is for educational purposes.
-   ```
+- Confirm dependencies are installed
+- Ensure environment variables are set in Vercel
+- Inspect Vercel build logs for details
 
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+### Firestore permission denied
 
-   The application will be available at `http://localhost:3000`
+- Publish the correct security rules
+- Confirm the authenticated request has required role claims
 
-5. **Build for production**
-   ```bash
-   npm run build
-   npm start
-   ```
+---
 
 ## Demo Credentials
-
-Log in with any of these credentials:
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -160,191 +389,20 @@ Log in with any of these credentials:
 | Mediator | mediator@elupun.com | mediator123 |
 | Staff | staff@elupun.com | staff123 |
 
-> **Note:** Demo credentials are displayed on the login page for ease of testing. Remove or disable this in production by setting `NEXT_PUBLIC_DEMO_CREDENTIALS_VISIBLE=false` in `.env.local`.
-
-## Architecture
-
-### Authentication Flow
-
-1. **Login**
-   - User submits email and password
-   - Server validates against hashed passwords in `data/users.json`
-   - On success, creates a Base64-encoded JWT-like token
-   - Sets token in an HttpOnly, Secure, SameSite cookie (1-hour expiration)
-
-2. **Session Validation**
-   - `AuthContext` fetches `/api/auth` GET on app load
-   - Middleware validates token from cookies on each request
-   - Protected routes redirect unauthenticated users to `/login`
-
-3. **Logout**
-   - User confirms logout via modal dialog
-   - Server clears auth cookie
-   - Client-side auth state resets
-   - User redirected to `/login`
-
-### Directory Structure
-
-```
-├── components/           # React components
-│   ├── Layout.js        # Main app shell with auth checks
-│   ├── Sidebar.js       # Navigation sidebar
-│   ├── AuthContext.js   # Centralized auth state (useAuth hook)
-│   └── LogoutConfirmation.js  # Logout confirmation modal
-├── pages/               # Next.js pages and API routes
-│   ├── index.js         # Homepage (public)
-│   ├── login.js         # Login page
-│   ├── users.js         # Admin user listing
-│   ├── api/
-│   │   ├── auth.js      # Authentication endpoints (POST login, GET verify, DELETE logout)
-│   │   ├── conflicts.js # Conflict report endpoints (protected)
-│   │   └── users.js     # User listing endpoint (admin-only)
-│   └── [other pages]    # Protected application pages
-├── lib/
-│   ├── auth.js          # Shared auth utilities (tokens, passwords, cookies)
-│   └── apiErrors.js     # API error handling utilities
-├── middleware.js        # Next.js middleware for route protection
-├── middleware.config.js # Middleware configuration (public routes, RBAC)
-├── styles/
-│   ├── Home.module.css  # All component styles
-│   └── globals.css      # Global styles
-├── data/
-│   └── users.json       # User database (local file-based)
-├── .env.local.example   # Environment configuration template
-└── README.md            # This file
-```
-
-### Key Technologies
-
-- **Next.js 14.2** - React framework with built-in routing and middleware
-- **React 18** - UI library
-- **Node.js crypto** - Password hashing (SHA-256)
-- **File system storage** - Local JSON-based data persistence
-- **CSS Modules** - Component-scoped styling
-
-## Configuration
-
-### Environment Variables
-
-Create `.env.local` from the template for optional configuration:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Available options:
-- `NODE_ENV` - Set to 'production' to hide demo credentials
-- `NEXT_PUBLIC_AUTH_SESSION_MAX_AGE` - Session duration in seconds (default: 3600)
-- `NEXT_PUBLIC_DEMO_CREDENTIALS_VISIBLE` - Show/hide demo credentials on login page
-- `DATA_PATH` - Path to data storage directory
-
-### Middleware & Route Protection
-
-Routes are protected via:
-- `middleware.js` - Server-side route protection checks auth cookies
-- `middleware.config.js` - Configuration for public routes and role-based access
-
-Protected routes automatically redirect unauthenticated users to `/login`.
-Admin-only routes require the `admin` role.
-
-## API Endpoints
-
-### Authentication
-
-- `POST /api/auth` - Login (email + password)
-  - Response: `{ user: { id, name, email, role }, }`
-  - Cookie: `authToken=...` (HttpOnly, 1 hour)
-
-- `GET /api/auth` - Verify session
-  - Requires: Valid auth cookie
-  - Response: `{ user: { id, name, email, role } }`
-
-- `DELETE /api/auth` - Logout
-  - Clears auth cookie
-  - Response: `{ message: 'Logged out successfully.' }`
-
-### Data
-
-- `GET /api/conflicts` - List conflict reports (public read)
-- `POST /api/conflicts` - Submit a conflict report (authenticated)
-- `GET /api/users` - List users (admin-only)
-
-## Security Considerations
-
-### Implemented
-
-✅ **HttpOnly Cookies** - Tokens stored in HttpOnly, Secure cookies (not accessible to JavaScript)
-✅ **Password Hashing** - SHA-256 hashing for stored passwords
-✅ **Server-Side Route Protection** - Middleware validates auth on every request
-✅ **CSRF Protection** - SameSite cookie policy
-✅ **Role-Based Access Control** - Admin-only endpoints reject non-admin requests
-
-### Recommendations for Production
-
-- Replace SHA-256 with bcrypt or Argon2 for password hashing
-- Implement proper JWT with signed tokens (not Base64)
-- Add HTTPS enforcement (already set in production via `Secure` flag)
-- Implement refresh token rotation for extended sessions
-- Add rate limiting on login endpoint
-- Set up audit logging for sensitive operations
-- Use a proper database (PostgreSQL, MongoDB) instead of JSON files
-- Implement password reset flow
-- Add two-factor authentication (2FA)
-- Regular security audits and penetration testing
-
-## Development
-
-### Code Style
-
-- ESLint configured for Next.js (included via CRA)
-- CSS Modules for scoped styling
-- Component-based architecture
-
-### Building
-
-```bash
-# Development build with watch mode
-npm run dev
-
-# Production build
-npm run build
-
-# Production server
-npm start
-```
-
-## Troubleshooting
-
-### Issue: "Cannot find module" errors on build
-**Solution:** Ensure all imports use correct relative paths and file extensions.
-
-### Issue: Auth not persisting across page reloads
-**Solution:** Check that cookies are being set correctly in browser DevTools. Ensure third-party cookies aren't blocked.
-
-### Issue: "Invalid token" when accessing protected routes
-**Solution:** Tokens expire after 1 hour. Log out and log back in to refresh.
-
-### Issue: CORS errors on API requests
-**Solution:** API requests use `credentials: 'include'` to send cookies. Ensure server allows requests from the same origin.
-
-## Future Enhancements
-
-- [ ] Password reset / recovery flow
-- [ ] Two-factor authentication (2FA)
-- [ ] OAuth integration (Google, Microsoft)
-- [ ] Database migration (PostgreSQL/MongoDB)
-- [ ] Email notifications for case updates
-- [ ] Advanced search and filtering
-- [ ] Audit logging
-- [ ] Analytics dashboard
-- [ ] Multi-language support
-- [ ] Mobile app (React Native)
-
-## Support & Questions
-
-For issues, questions, or contributions, please contact the development team or create an issue in the project repository.
+> Remove or hide demo credentials in production.
 
 ---
 
-**Version:** 0.1.0  
-**Last Updated:** May 3, 2026
+## Contributing
+
+1. Fork the repository
+2. Create a branch
+3. Implement changes
+4. Test thoroughly
+5. Submit a pull request
+
+---
+
+## License
+
+This project is provided for educational use.
