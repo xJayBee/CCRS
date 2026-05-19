@@ -1,5 +1,12 @@
 import { hashPassword, createToken, getAuthTokenFromHeaders, parseToken, getAuthCookieOptions } from '../../lib/auth';
-import { getUserByEmailServer, createUserServer } from '../../lib/firestore';
+import {
+  getUserByEmail,
+  getUserByEmailServer,
+  createUser,
+  createUserServer,
+} from '../../lib/firestore';
+
+const useAdminAuth = Boolean(process.env.FIREBASE_ADMIN_SDK_PROJECT_ID && process.env.FIREBASE_ADMIN_SDK_PRIVATE_KEY);
 
 // Validate Firebase configuration
 function validateFirebaseConfig() {
@@ -12,6 +19,14 @@ function validateFirebaseConfig() {
   if (missing.length > 0) {
     throw new Error(`Missing Firebase config: ${missing.join(', ')}`);
   }
+}
+
+async function getUserByEmailFallback(email) {
+  return useAdminAuth ? await getUserByEmailServer(email) : await getUserByEmail(email);
+}
+
+async function createUserFallback(userData) {
+  return useAdminAuth ? await createUserServer(userData) : await createUser(userData);
 }
 
 const defaultUsers = [
@@ -40,9 +55,9 @@ async function ensureDefaultUsers() {
     for (const userData of defaultUsers) {
       try {
         const normalizedEmail = userData.email.toLowerCase();
-        const existingUser = await getUserByEmailServer(normalizedEmail);
+        const existingUser = await getUserByEmailFallback(normalizedEmail);
         if (!existingUser) {
-          await createUserServer({
+          await createUserFallback({
             name: userData.name,
             email: normalizedEmail,
             password: hashPassword(userData.password),
@@ -52,7 +67,7 @@ async function ensureDefaultUsers() {
       } catch (userError) {
         // Silently fail - user might already exist
         if (userError?.message?.includes?.('already exists')) {
-          return; // User already exists, skip
+          continue;
         }
         // Log other errors but don't block
         console.warn(`Warning processing user ${userData.email}:`, userError?.message?.substring(0, 100));
@@ -97,7 +112,7 @@ export default async function handler(req, res) {
       }
 
       const normalizedEmail = String(email).toLowerCase();
-      const user = await getUserByEmailServer(normalizedEmail);
+      const user = await getUserByEmailFallback(normalizedEmail);
       if (!user) {
         return res.status(401).json({ error: 'Invalid email or password.' });
       }
