@@ -112,9 +112,7 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
   ];
 
   const quickActions = [
-    { label: 'New Report', icon: '📋', action: () => handleReportConflictClick(), allowedRoles: ['client'] },
     { label: 'Schedule Meeting', icon: '📅', href: '/schedule-meeting', allowedRoles: ['admin', 'mediator', 'staff'] },
-    { label: 'Find Venue', icon: '🔍', href: '/find-venue', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
   ];
 
   const visibleQuickActions = quickActions.filter((action) => action.allowedRoles.includes(currentUser.role));
