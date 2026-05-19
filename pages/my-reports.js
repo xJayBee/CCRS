@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '../components/Layout';
 import { useAuth } from '../components/AuthContext';
@@ -19,7 +19,9 @@ export default function MyReports() {
   const [reportLoading, setReportLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [notification, setNotification] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const prevReportsRef = useRef([]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -33,6 +35,15 @@ export default function MyReports() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      fetchReports();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchReports = async () => {
     try {
       setReportLoading(true);
@@ -42,8 +53,23 @@ export default function MyReports() {
       if (response.ok) {
         const data = await response.json();
         const userReports = data.filter((report) => report.createdBy === user?.email);
+
+        if (prevReportsRef.current.length > 0) {
+          const updatedReports = userReports.filter((report) => {
+            const previous = prevReportsRef.current.find((item) => item.id === report.id);
+            return previous && previous.status !== report.status;
+          });
+
+          if (updatedReports.length > 0) {
+            const latestUpdate = updatedReports[0];
+            setNotification(`Your report "${latestUpdate.parties}" was updated to ${latestUpdate.status}.`);
+            setTimeout(() => setNotification(''), 8000);
+          }
+        }
+
         setReports(userReports);
         setFilteredReports(userReports);
+        prevReportsRef.current = userReports;
         setError('');
       } else {
         setError('Failed to load reports');
@@ -184,6 +210,7 @@ export default function MyReports() {
 
         {/* Messages */}
         {error && <div className={styles.errorMessage}>{error}</div>}
+        {notification && <div className={styles.successMessage}>{notification}</div>}
         {success && <div className={styles.successMessage}>{success}</div>}
 
         {/* Header */}

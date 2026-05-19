@@ -24,7 +24,6 @@ const managementNavItems = [
 ];
 
 const toolsNavItems = [
-  { href: '/find-venue', label: 'Find Venue', icon: '🔍', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
   { href: '/track-progress', label: 'Track Progress', icon: '📈', allowedRoles: ['admin', 'mediator', 'staff', 'client'] },
 ];
 
