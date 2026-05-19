@@ -1,4 +1,4 @@
-﻿# E-Lupon Community Conflict Resolution System
+﻿# Project Documentation
 
 A simplified guide for the CCRS project, focused on setup, deployment, and usage.
 
