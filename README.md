@@ -26,6 +26,13 @@ Welcome to the consolidated documentation for the CCRS project. This single file
 
 ---
 
+## Latest updates
+
+- Fixed registration flow so unauthenticated users can reach `/register` and create accounts.
+- Updated middleware to allow `/register` as a public route.
+- Removed the `New Report` and `Find Venue` sidebar quick action buttons.
+- Deployed successfully to Vercel: `https://ccrsystem.vercel.app`
+
 ## Project Overview
 
 The E-Lupon Community Conflict Resolution System is a Next.js 14 application built to support community conflict reporting, mediation, venue management, and case tracking. It provides role-based access for administrators, mediators, and staff, backed by Firebase Firestore.
