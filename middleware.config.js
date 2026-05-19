@@ -16,7 +16,7 @@ export const config = {
   ],
 };
 
-export const PUBLIC_ROUTES = ['/', '/login', '/about', '/help', '/legal', '/resources'];
+export const PUBLIC_ROUTES = ['/', '/login', '/register', '/about', '/help', '/legal', '/resources'];
 
 /**
  * Routes that require authentication
