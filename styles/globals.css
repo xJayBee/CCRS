@@ -7,6 +7,38 @@ body {
   color: #1f2937;
 }
 
+:root {
+  --sidebar-width: 300px;
+  --gutter: 24px;
+  --max-content-width: 1200px;
+}
+
+html {
+  font-size: clamp(14px, 1.1vw, 16px);
+}
+
+img,
+picture,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.container {
+  padding-inline: var(--gutter);
+  margin-inline: auto;
+  max-width: var(--max-content-width);
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sidebar-width: 0px;
+    --gutter: 12px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
