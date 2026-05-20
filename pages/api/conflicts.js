@@ -4,8 +4,14 @@ import {
   updateConflictServer,
   getConflictByIdServer,
   deleteConflictServer,
+  getConflicts,
+  createConflict,
+  updateConflict,
+  getConflictById,
+  deleteConflict,
 } from '../../lib/firestore';
 import { getAuthTokenFromHeaders, parseToken } from '../../lib/auth';
+import { adminDb } from '../../lib/firebaseAdmin';
 
 function validateConflictPayload(payload) {
   const { description, parties, date } = payload;
@@ -16,11 +22,12 @@ function validateConflictPayload(payload) {
 }
 
 export default async function handler(req, res) {
+    const useAdmin = !!adminDb;
   try {
     if (req.method === 'GET') {
       const search = String(req.query.search || '').trim().toLowerCase();
       const statusFilter = String(req.query.status || '').trim();
-      const conflicts = await getConflictsServer();
+      const conflicts = useAdmin ? await getConflictsServer() : await getConflicts();
 
       let filtered = conflicts;
       if (statusFilter) {
@@ -75,7 +82,7 @@ export default async function handler(req, res) {
         ],
       };
 
-      const conflict = await createConflictServer(newConflict);
+      const conflict = useAdmin ? await createConflictServer(newConflict) : await createConflict(newConflict);
       return res.status(201).json({ message: 'Conflict report saved', report: conflict });
     }
 
@@ -100,7 +107,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid status value.' });
       }
 
-      const existingConflict = await getConflictByIdServer(id);
+      const existingConflict = useAdmin ? await getConflictByIdServer(id) : await getConflictById(id);
       if (!existingConflict) {
         return res.status(404).json({ error: 'Report not found.' });
       }
@@ -132,7 +139,7 @@ export default async function handler(req, res) {
         activityLog: [...(existingConflict.activityLog || []), logEntry],
       };
 
-      const conflict = await updateConflictServer(id, updatedConflict);
+      const conflict = useAdmin ? await updateConflictServer(id, updatedConflict) : await updateConflict(id, updatedConflict);
       return res.status(200).json({ message: 'Report updated successfully', report: conflict });
     }
 
@@ -148,7 +155,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing report ID.' });
       }
 
-      const existingConflict = await getConflictByIdServer(id);
+      const existingConflict = useAdmin ? await getConflictByIdServer(id) : await getConflictById(id);
       if (!existingConflict) {
         return res.status(404).json({ error: 'Report not found.' });
       }
@@ -166,7 +173,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Can only delete reports that are pending review.' });
       }
 
-      await deleteConflictServer(id);
+      if (useAdmin) {
+        await deleteConflictServer(id);
+      } else {
+        await deleteConflict(id);
+      }
       return res.status(200).json({ message: 'Report deleted successfully', id });
     }
 
