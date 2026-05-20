@@ -373,6 +373,19 @@ export default function ResolveConflict() {
                   </p>
                 </>
               )}
+
+              {Array.isArray(selectedReport.auditLog) && selectedReport.auditLog.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
+                    <strong>Audit log</strong>
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: '18px', color: '#475569', lineHeight: '1.7' }}>
+                    {selectedReport.auditLog.slice(-4).map((entry, index) => (
+                      <li key={index}>✓ {entry}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div className={styles.modalActions}>

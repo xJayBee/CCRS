@@ -13,7 +13,7 @@ export default function ManageReports() {
   const [filteredReports, setFilteredReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('Pending review');
+  const [statusFilter, setStatusFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -72,7 +72,8 @@ export default function ManageReports() {
         (report) =>
           report.parties.toLowerCase().includes(searchTerm.toLowerCase()) ||
           report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.location.toLowerCase().includes(searchTerm.toLowerCase())
+          report.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (report.assignedMediator || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
