@@ -139,7 +139,11 @@ export default async function handler(req, res) {
         activityLog: [...(existingConflict.activityLog || []), logEntry],
       };
 
-      const conflict = useAdmin ? await updateConflictServer(id, updatedConflict) : await updateConflict(id, updatedConflict);
+      // Firestore rejects fields set to `undefined`. Remove them before updating.
+      const cleanedConflict = JSON.parse(JSON.stringify(updatedConflict));
+      const conflict = useAdmin
+        ? await updateConflictServer(id, cleanedConflict)
+        : await updateConflict(id, cleanedConflict);
       return res.status(200).json({ message: 'Report updated successfully', report: conflict });
     }
 
