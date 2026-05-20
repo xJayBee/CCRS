@@ -314,6 +314,15 @@ export default function ResolveConflict() {
               </p>
               <p style={{ margin: '0 0 16px', color: '#475569' }}>{selectedReport.location}</p>
 
+              {selectedReport.assignedMediator && (
+                <>
+                  <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
+                    <strong>Assigned Mediator:</strong>
+                  </p>
+                  <p style={{ margin: '0 0 16px', color: '#475569' }}>{selectedReport.assignedMediator}</p>
+                </>
+              )}
+
               <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
                 <strong>Incident Date:</strong>
               </p>

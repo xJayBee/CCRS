@@ -167,6 +167,8 @@ export default function ManageReports() {
         return { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' };
       case 'Approved':
         return { bg: '#ecfdf5', color: '#166534', border: '#d1fae5' };
+      case 'Assigned':
+        return { bg: '#f0f9ff', color: '#0c4a6e', border: '#bae6fd' };
       case 'Resolved':
         return { bg: '#e0e7ff', color: '#3730a3', border: '#c7d2fe' };
       default:
@@ -254,6 +256,7 @@ export default function ManageReports() {
                 <option value="">All Statuses</option>
                 <option value="Pending review">Pending Review</option>
                 <option value="Under review">Under Review</option>
+                <option value="Assigned">Assigned</option>
                 <option value="Approved">Approved</option>
                 <option value="Resolved">Resolved</option>
               </select>
@@ -371,6 +374,20 @@ export default function ManageReports() {
                       >
                         {report.priority} Priority
                       </span>
+                      {report.assignedMediator && (
+                        <span
+                          style={{
+                            background: '#f5f3ff',
+                            color: '#4338ca',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                          }}
+                        >
+                          Assigned to {report.assignedMediator}
+                        </span>
+                      )}
                       {['Pending review', 'Under review'].includes(report.status) && (
                         <button
                           className={styles.primaryButton}
@@ -463,6 +480,16 @@ export default function ManageReports() {
                   {selectedReport.priority}
                 </span>
               </p>
+              {selectedReport.assignedMediator && (
+                <p style={{ margin: '0 0 16px', color: '#475569' }}>
+                  <strong>Assigned Mediator:</strong> {selectedReport.assignedMediator}
+                </p>
+              )}
+              {selectedReport.createdBy && (
+                <p style={{ margin: '0 0 16px', color: '#475569' }}>
+                  <strong>Submitted By:</strong> {selectedReport.createdBy}
+                </p>
+              )}
 
               <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
                 <strong>Status:</strong>

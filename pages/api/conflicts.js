@@ -19,17 +19,23 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const search = String(req.query.search || '').trim().toLowerCase();
+      const statusFilter = String(req.query.status || '').trim();
       const conflicts = await getConflictsServer();
-      
-      const filtered = search
-        ? conflicts.filter((item) =>
+
+      let filtered = conflicts;
+      if (statusFilter) {
+        filtered = filtered.filter((item) => item.status === statusFilter);
+      }
+
+      filtered = search
+        ? filtered.filter((item) =>
             [item.description, item.parties, item.location, item.priority, item.status, item.submittedAt]
               .filter(Boolean)
               .join(' ')
               .toLowerCase()
               .includes(search)
           )
-        : conflicts;
+        : filtered;
 
       return res.status(200).json(filtered.reverse());
     }
@@ -47,6 +53,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: validationError });
       }
 
+      const submittedAt = new Date().toISOString();
       const newConflict = {
         description: payload.description,
         parties: payload.parties,
@@ -55,8 +62,17 @@ export default async function handler(req, res) {
         date: payload.date,
         evidence: payload.evidence || 'None',
         status: payload.status || 'Pending review',
-        submittedAt: payload.submittedAt || new Date().toISOString(),
+        submittedAt,
         createdBy: user.email,
+        reportedBy: user.email,
+        activityLog: [
+          {
+            timestamp: submittedAt,
+            actor: user.email,
+            action: 'Reported conflict',
+            details: `Conflict reported by ${user.email}`,
+          },
+        ],
       };
 
       const conflict = await createConflictServer(newConflict);
@@ -67,14 +83,14 @@ export default async function handler(req, res) {
       const token = getAuthTokenFromHeaders(req.headers);
       const user = token ? parseToken(token) : null;
       if (!user) {
-        return res.status(401).json({ error: 'Authentication required to approve a report.' });
+        return res.status(401).json({ error: 'Authentication required to update a report.' });
       }
 
-      if (!['admin', 'staff'].includes(user.role)) {
-        return res.status(403).json({ error: 'Only admin and staff users can approve reports.' });
+      if (!['admin', 'staff', 'mediator'].includes(user.role)) {
+        return res.status(403).json({ error: 'Only admin, staff, or mediator users can update reports.' });
       }
 
-      const { id, status, approvalNotes } = req.body;
+      const { id, status, approvalNotes, resolvedBy, resolvedAt } = req.body;
       if (!id || !status) {
         return res.status(400).json({ error: 'Missing report ID or status.' });
       }
@@ -89,12 +105,31 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Report not found.' });
       }
 
+      const actionLabel =
+        status === 'Approved'
+          ? 'Approved report'
+          : status === 'Under review'
+          ? 'Marked report under review'
+          : status === 'Resolved'
+          ? 'Resolved report'
+          : `Updated status to ${status}`;
+
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        actor: user.email,
+        action: actionLabel,
+        details: approvalNotes || '',
+      };
+
       const updatedConflict = {
         ...existingConflict,
         status,
-        approvedBy: user.email,
-        approvalNotes: approvalNotes || existingConflict.approvalNotes || '',
+        approvedBy: status === 'Approved' ? user.email : existingConflict.approvedBy,
+        approvalNotes: approvalNotes !== undefined ? approvalNotes : existingConflict.approvalNotes || '',
         approvedAt: status === 'Approved' ? new Date().toISOString() : existingConflict.approvedAt,
+        resolvedBy: status === 'Resolved' ? resolvedBy || user.email : existingConflict.resolvedBy,
+        resolvedAt: status === 'Resolved' ? resolvedAt || new Date().toISOString() : existingConflict.resolvedAt,
+        activityLog: [...(existingConflict.activityLog || []), logEntry],
       };
 
       const conflict = await updateConflictServer(id, updatedConflict);

@@ -4,6 +4,8 @@ import {
   updateAssignmentServer,
   getAssignmentByIdServer,
   deleteAssignmentServer,
+  getConflictByIdServer,
+  updateConflictServer,
 } from '../../lib/firestore';
 import { getAuthTokenFromHeaders, parseToken } from '../../lib/auth';
 
@@ -46,6 +48,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: validationError });
       }
 
+      const existingConflict = await getConflictByIdServer(payload.conflictId);
+      if (!existingConflict) {
+        return res.status(404).json({ error: 'Conflict not found.' });
+      }
+
+      if (existingConflict.status === 'Resolved') {
+        return res.status(400).json({ error: 'Cannot assign a mediator to a resolved conflict.' });
+      }
+
+      if (existingConflict.assignedMediator) {
+        return res.status(400).json({ error: 'This conflict already has an assigned mediator.' });
+      }
+
+      const assignedAt = new Date().toISOString();
       const newAssignment = {
         conflictId: payload.conflictId,
         mediatorId: payload.mediatorId,
@@ -54,11 +70,31 @@ export default async function handler(req, res) {
         status: payload.status || 'Assigned',
         notes: payload.notes || '',
         assignedBy: user.email,
-        assignedAt: new Date().toISOString(),
+        assignedAt,
       };
 
       const assignment = await createAssignmentServer(newAssignment);
-      return res.status(201).json({ message: 'Mediator assigned successfully', assignment });
+
+      const updatedConflict = {
+        ...existingConflict,
+        status: 'Under review',
+        assignedMediator: payload.mediatorName,
+        assignedMediatorEmail: payload.mediatorEmail || user.email,
+        assignedAt,
+        activityLog: [
+          ...(existingConflict.activityLog || []),
+          {
+            timestamp: assignedAt,
+            actor: user.email,
+            action: 'Mediator assigned',
+            details: `${payload.mediatorName} assigned to conflict ${payload.conflictId}`,
+          },
+        ],
+      };
+
+      await updateConflictServer(payload.conflictId, updatedConflict);
+
+      return res.status(201).json({ message: 'Mediator assigned successfully', assignment, conflict: updatedConflict });
     }
 
     if (req.method === 'PATCH') {

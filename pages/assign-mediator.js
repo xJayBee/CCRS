@@ -45,7 +45,16 @@ export default function AssignMediator() {
         credentials: 'include',
       });
       const conflictsData = await conflictsRes.json();
-      const unassignedConflicts = Array.isArray(conflictsData) ? conflictsData.filter(c => c.status !== 'Resolved') : [];
+      const unassignedConflicts = Array.isArray(conflictsData)
+        ? conflictsData
+            .filter((c) => !c.assignedMediator && c.status !== 'Resolved')
+            .sort((a, b) => {
+              const priorityWeight = { Urgent: 3, High: 2, Normal: 1 };
+              const statusWeight = { 'Pending review': 2, 'Under review': 1, Approved: 0 };
+              return (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0) ||
+                (statusWeight[b.status] || 0) - (statusWeight[a.status] || 0);
+            })
+        : [];
       setConflicts(unassignedConflicts);
 
       // Fetch mediators
@@ -65,7 +74,7 @@ export default function AssignMediator() {
   const filteredConflicts = useMemo(
     () => conflicts.filter((conflict) => {
       const matchesSearch = searchTerm
-        ? [conflict.id, conflict.description, conflict.parties].join(' ').toLowerCase().includes(searchTerm.toLowerCase())
+        ? [conflict.id, conflict.description, conflict.parties, conflict.location].join(' ').toLowerCase().includes(searchTerm.toLowerCase())
         : true;
       const matchesStatus = statusFilter ? conflict.status === statusFilter : true;
       return matchesSearch && matchesStatus;
