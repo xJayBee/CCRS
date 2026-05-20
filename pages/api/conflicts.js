@@ -174,6 +174,10 @@ export default async function handler(req, res) {
     return res.status(405).end();
   } catch (error) {
     console.error('Conflicts API error:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    // Include stack trace in development to aid debugging. In production this helps logs;
+    // keep response minimal but return stack for diagnosability while we fix the root cause.
+    return res
+      .status(500)
+      .json({ error: 'Internal server error', message: error.message, stack: error.stack });
   }
 }
