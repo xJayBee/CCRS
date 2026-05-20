@@ -1119,6 +1119,47 @@
   }
 }
 
+/* Tighter mobile spacing adjustments for small screens */
+@media (max-width: 720px) {
+  .sidebar {
+    padding: 12px 14px;
+  }
+
+  .sidebarTop {
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 1.2rem;
+  }
+
+  .mainContent {
+    padding: 12px 12px;
+  }
+
+  .panelCard,
+  .formCard,
+  .filterCard,
+  .mapCard,
+  .dashboardCard {
+    padding: 16px;
+  }
+
+  .formField input[type="text"],
+  .formField select,
+  .formField textarea {
+    padding: 10px 12px;
+  }
+
+  .metricCard {
+    padding: 14px;
+  }
+
+  .venueRow {
+    padding: 12px;
+  }
+}
+
 .venueRow {
   display: flex;
   justify-content: space-between;
