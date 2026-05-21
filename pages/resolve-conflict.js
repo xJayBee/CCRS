@@ -40,8 +40,8 @@ export default function ResolveConflict() {
       });
       if (response.ok) {
         const data = await response.json();
-        const approvedReports = data.filter((r) => r.status === 'Approved' || r.status === 'Under review');
-        setReports(approvedReports);
+        const activeReports = data.filter((r) => ['Approved', 'Under review', 'Assigned', 'Scheduled'].includes(r.status));
+        setReports(activeReports);
         setError('');
       } else {
         setError('Failed to load reports');
@@ -103,6 +103,10 @@ export default function ResolveConflict() {
         return { bg: '#ecfdf5', color: '#166534', border: '#d1fae5' };
       case 'Under review':
         return { bg: '#dbeafe', color: '#1e40af', border: '#bfdbfe' };
+      case 'Assigned':
+        return { bg: '#fef9c3', color: '#92400e', border: '#fde68a' };
+      case 'Scheduled':
+        return { bg: '#ede9fe', color: '#5b21b6', border: '#c4b5fd' };
       case 'Resolved':
         return { bg: '#e0e7ff', color: '#3730a3', border: '#c7d2fe' };
       default:
@@ -112,6 +116,7 @@ export default function ResolveConflict() {
 
   const approvedReports = reports.filter((r) => r.status === 'Approved');
   const underReviewReports = reports.filter((r) => r.status === 'Under review');
+  const assignedReports = reports.filter((r) => r.status === 'Assigned' || r.status === 'Scheduled');
 
   if (loading) {
     return (
@@ -242,6 +247,57 @@ export default function ResolveConflict() {
                       setShowDetailModal(true);
                     }}
                     style={{ cursor: 'pointer', opacity: 0.8 }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ margin: '0 0 6px', fontWeight: '600', fontSize: '1.05rem' }}>
+                        {report.parties}
+                      </h4>
+                      <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: '0.95rem' }}>
+                        {report.description.substring(0, 80)}...
+                      </p>
+                      <p style={{ margin: '0', color: '#94a3b8', fontSize: '0.85rem' }}>
+                        📍 {report.location} | Priority: <strong>{report.priority}</strong>
+                      </p>
+                    </div>
+                    <span
+                      style={{
+                        background: statusColor.bg,
+                        color: statusColor.color,
+                        border: `1px solid ${statusColor.border}`,
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {report.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {assignedReports.length > 0 && (
+          <div className={styles.panelCard} style={{ marginBottom: '24px' }}>
+            <div className={styles.cardHeaderRow}>
+              <h2 style={{ margin: 0 }}>Assigned / Scheduled Reports ({assignedReports.length})</h2>
+            </div>
+
+            <div style={{ marginTop: '20px' }}>
+              {assignedReports.map((report) => {
+                const statusColor = getStatusColor(report.status);
+                return (
+                  <div
+                    key={report.id}
+                    className={styles.venueRow}
+                    onClick={() => {
+                      setSelectedReport(report);
+                      setShowDetailModal(true);
+                    }}
+                    style={{ cursor: 'pointer' }}
                   >
                     <div style={{ flex: 1 }}>
                       <h4 style={{ margin: '0 0 6px', fontWeight: '600', fontSize: '1.05rem' }}>
