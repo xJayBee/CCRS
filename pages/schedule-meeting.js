@@ -44,7 +44,7 @@ export default function ScheduleMeeting() {
 
   useEffect(() => {
     if (user && ['admin', 'mediator', 'staff'].includes(user.role)) {
-      fetchApprovedReports();
+      fetchScheduledReports();
     }
   }, [user]);
 
@@ -58,7 +58,7 @@ export default function ScheduleMeeting() {
     }
   }, [searchParams, reports]);
 
-  const fetchApprovedReports = async () => {
+  const fetchScheduledReports = async () => {
     try {
       setLoadingReports(true);
       setError('');
@@ -67,10 +67,12 @@ export default function ScheduleMeeting() {
       });
       if (response.ok) {
         const data = await response.json();
-        const approvedReports = data.filter((r) => r.status === 'Approved');
-        setReports(approvedReports);
+        const reportCandidates = data.filter((r) =>
+          ['Approved', 'Under review'].includes(r.status) || r.assignedMediator
+        );
+        setReports(reportCandidates);
       } else {
-        setError('Failed to load approved reports');
+        setError('Failed to load reports for scheduling');
       }
     } catch (error) {
       console.error('Error fetching reports:', error);

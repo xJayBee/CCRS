@@ -120,12 +120,8 @@ export default function AssignMediator() {
       const result = await response.json();
       
       if (response.ok) {
-        setSuccessMessage(`✓ Mediator ${mediator.name} assigned to conflict successfully!`);
-        setSelectedConflict(null);
-        setSelectedMediator('');
-        setAssignmentNotes('');
         await fetchConflictsAndMediators();
-        setTimeout(() => setSuccessMessage(''), 5000);
+        router.push(`/schedule-meeting?reportId=${selectedConflict.id}`);
       } else {
         setErrorMessage(result.error || 'Failed to assign mediator');
       }
