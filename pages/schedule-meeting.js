@@ -68,7 +68,7 @@ export default function ScheduleMeeting() {
       if (response.ok) {
         const data = await response.json();
         const reportCandidates = data.filter((r) =>
-          ['Approved', 'Under review'].includes(r.status) || r.assignedMediator
+          ['Approved', 'Under review'].includes(r.status) && !r.assignedMeetingId
         );
         setReports(reportCandidates);
       } else {
