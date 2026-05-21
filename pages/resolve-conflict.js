@@ -12,6 +12,8 @@ export default function ResolveConflict() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('Approved');
   const [loading, setLoading] = useState(true);
+  const [loadingMeeting, setLoadingMeeting] = useState(false);
+  const [meetingDetails, setMeetingDetails] = useState(null);
   const [error, setError] = useState('');
   const [updateInProgress, setUpdateInProgress] = useState(false);
 
@@ -96,6 +98,36 @@ export default function ResolveConflict() {
       router.push(`/schedule-meeting?reportId=${selectedReport.id}&report=${encodeURIComponent(selectedReport.parties)}`);
     }
   };
+
+  useEffect(() => {
+    if (!selectedReport || !showDetailModal) {
+      setMeetingDetails(null);
+      return;
+    }
+
+    const fetchMeetingByReport = async () => {
+      if (!selectedReport.id) return;
+      setLoadingMeeting(true);
+      try {
+        const response = await fetch(`/api/schedule?reportId=${selectedReport.id}`, {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const meetings = await response.json();
+          setMeetingDetails(Array.isArray(meetings) && meetings.length > 0 ? meetings[0] : null);
+        } else {
+          setMeetingDetails(null);
+        }
+      } catch (error) {
+        console.error('Error loading meeting details:', error);
+        setMeetingDetails(null);
+      } finally {
+        setLoadingMeeting(false);
+      }
+    };
+
+    fetchMeetingByReport();
+  }, [selectedReport, showDetailModal]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -379,6 +411,29 @@ export default function ResolveConflict() {
                 </>
               )}
 
+              {meetingDetails && (
+                <>
+                  <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
+                    <strong>Scheduled Meeting</strong>
+                  </p>
+                  <p style={{ margin: '0 0 6px', color: '#475569' }}>
+                    <strong>Title:</strong> {meetingDetails.title}
+                  </p>
+                  <p style={{ margin: '0 0 6px', color: '#475569' }}>
+                    <strong>Date:</strong> {meetingDetails.date}
+                  </p>
+                  <p style={{ margin: '0 0 16px', color: '#475569' }}>
+                    <strong>Time:</strong> {meetingDetails.time}
+                  </p>
+                </>
+              )}
+
+              {!meetingDetails && selectedReport.assignedMeetingId && !loadingMeeting && (
+                <p style={{ margin: '0 0 16px', color: '#475569' }}>
+                  Meeting is scheduled but details are still loading or unavailable.
+                </p>
+              )}
+
               <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
                 <strong>Incident Date:</strong>
               </p>
@@ -445,14 +500,16 @@ export default function ResolveConflict() {
             </div>
 
             <div className={styles.modalActions}>
-              <button
-                className={styles.primaryButton}
-                onClick={handleScheduleMeeting}
-                style={{ flex: 1 }}
-              >
-                📅 Schedule Meeting
-              </button>
-              {selectedReport.status === 'Under review' && (
+              {!selectedReport.assignedMeetingId && selectedReport.status !== 'Scheduled' && (
+                <button
+                  className={styles.primaryButton}
+                  onClick={handleScheduleMeeting}
+                  style={{ flex: 1 }}
+                >
+                  📅 Schedule Meeting
+                </button>
+              )}
+              {['Under review', 'Assigned', 'Scheduled'].includes(selectedReport.status) && (
                 <button
                   className={styles.secondaryButton}
                   onClick={handleResolveReport}
