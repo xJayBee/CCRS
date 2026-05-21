@@ -160,9 +160,6 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
             {item.label}
           </Link>
         ))}
-        <p className={styles.sidebarFooterNote}>
-          💡 Tip: Use keyboard shortcuts to speed up navigation. Press <kbd className={styles.shortcutKey}>?</kbd> for help.
-        </p>
       </div>
     </aside>
   );
