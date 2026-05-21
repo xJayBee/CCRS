@@ -368,28 +368,29 @@ export default function ResolveConflict() {
       {showDetailModal && selectedReport && (
         <div className={styles.modalOverlay} onClick={() => setShowDetailModal(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <div>
-                <h2 className={styles.modalTitle}>{selectedReport.parties}</h2>
-                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>
-                  Status: <strong>{selectedReport.status}</strong>
-                </p>
+            <div className={styles.modalBody}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div>
+                  <h2 className={styles.modalTitle}>{selectedReport.parties}</h2>
+                  <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                    Status: <strong>{selectedReport.status}</strong>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                  }}
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: '#94a3b8',
-                }}
-              >
-                ✕
-              </button>
-            </div>
 
-            <div style={{ marginBottom: '20px', lineHeight: '1.8' }}>
+              <div style={{ marginBottom: '20px', lineHeight: '1.8' }}>
               <p style={{ margin: '0 0 12px', color: '#0f172a', fontWeight: '600' }}>
                 <strong>Description:</strong>
               </p>
@@ -497,6 +498,8 @@ export default function ResolveConflict() {
                   </ul>
                 </div>
               )}
+            </div>
+
             </div>
 
             <div className={styles.modalActions}>

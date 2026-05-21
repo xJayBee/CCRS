@@ -2130,18 +2130,28 @@
   display: grid;
   place-items: center;
   z-index: 1000;
-  padding: 24px;
+  padding: 16px;
 }
 
 .modalCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 32px;
-  max-width: 420px;
+  padding: 0;
+  max-width: min(420px, 100%);
   width: 100%;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
   animation: slideUp 0.3s ease-out;
+}
+
+.modalBody {
+  padding: 28px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 @keyframes slideUp {
@@ -2170,6 +2180,29 @@
 .modalActions {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modalActions > * {
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .modalCard {
+    padding: 20px;
+  }
+
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+
+  .modalActions {
+    gap: 10px;
+  }
+
+  .modalActions > * {
+    width: 100%;
+  }
 }
 
 .dangerButton {
