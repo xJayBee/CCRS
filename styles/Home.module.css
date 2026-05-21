@@ -861,7 +861,7 @@
   }
 
   .pageShell {
-    padding-top: 120px;
+    padding-top: 0;
   }
 
   .cardShell > * {

@@ -110,12 +110,6 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
     { href: '/about', label: 'About' },
   ];
 
-  const quickActions = [
-    { label: 'Schedule Meeting', icon: '📅', href: '/schedule-meeting', allowedRoles: ['admin', 'mediator', 'staff'] },
-  ];
-
-  const visibleQuickActions = quickActions.filter((action) => action.allowedRoles.includes(currentUser.role));
-
   return (
     <aside
       className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ''} ${isMobileOpen ? styles.sidebarMobileOpen : ''}`}
@@ -158,32 +152,6 @@ export default function Sidebar({ isMobileOpen, onCloseMobileSidebar }) {
           <NavSection items={visibleToolsItems} />
         </nav>
 
-        {visibleQuickActions.length > 0 && (
-          <div className={styles.quickActions}>
-            <p className={styles.sectionTitle}>Quick Actions</p>
-            <div className={styles.quickActionList}>
-              {visibleQuickActions.map((action, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  className={styles.quickAction}
-                  onClick={() => {
-                    if (action.href) {
-                      if (onCloseMobileSidebar) onCloseMobileSidebar();
-                      router.push(action.href);
-                    } else if (action.action) {
-                      action.action();
-                    }
-                  }}
-                  title={action.label}
-                >
-                  <span className={styles.quickActionIcon}>{action.icon}</span>
-                  <span className={styles.quickActionLabel}>{action.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className={styles.sidebarFooter}>
