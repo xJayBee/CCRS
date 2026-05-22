@@ -1,6 +1,6 @@
 ﻿# Project Documentation
 
-A simplified guide for the CCRS project, focused on setup, deployment, and usage.
+Current snapshot of the Community Conflict Resolution System (CCRS) — setup, environment, structure, and quick reference.
 
 ---
 
@@ -12,15 +12,15 @@ A simplified guide for the CCRS project, focused on setup, deployment, and usage
 npm install
 ```
 
-2. Copy the environment template:
+2. Create a local environment file (no example file is required in this repo):
 
 ```bash
-cp .env.local.example .env.local
+copy .env.example .env.local  # Windows
 ```
 
-3. Add Firebase config values to `.env.local`.
+3. Add Firebase client and, if used, Firebase Admin values to `.env.local` (see Environment section).
 
-4. Run the app:
+4. Run the app in development:
 
 ```bash
 npm run dev
@@ -34,97 +34,139 @@ http://localhost:3000
 
 ---
 
-## Features
+## Project Highlights
 
-- Login/register flow with secure HttpOnly cookie sessions
-- Role-based access control (admin, mediator, staff, client)
-- Firebase Firestore persistence
-- Responsive Next.js UI with sidebar navigation
-- CRUD for venues, conflicts, users, and assignments
-- Vercel deployment ready
-
----
-
-## Tech Stack
-
-- Next.js 14
-- React 18
-- Firebase Firestore
-- CSS Modules
-- Vercel
-- Node.js 18+
+- Next.js app (version: 14.2.5)
+- Role-based access control with middleware and route matching
+- Firebase Firestore for persistence (client + optional Admin SDK)
+- Server-side and client-side helpers in `lib/`
+- Minimal, responsive UI components in `components/`
+- API routes under `pages/api/` for backend endpoints
+- Vercel-ready deployment (includes `vercel.json` and `next.config.js`)
 
 ---
 
-## Firebase Setup
+## Environment Variables
 
-Add the Firebase values to `.env.local`:
+Client (required for Firebase client SDK):
 
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123:web:abcdef
 ```
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+```
+
+Optional Server / Admin (used by `lib/firebaseAdmin.js` when provided):
+
+```
+FIREBASE_ADMIN_SDK_TYPE
+FIREBASE_ADMIN_SDK_PROJECT_ID
+FIREBASE_ADMIN_SDK_PRIVATE_KEY  # watch newlines; stored with \n replaced
+FIREBASE_ADMIN_SDK_PRIVATE_KEY_ID
+FIREBASE_ADMIN_SDK_CLIENT_EMAIL
+FIREBASE_ADMIN_SDK_CLIENT_ID
+FIREBASE_ADMIN_SDK_AUTH_URI
+FIREBASE_ADMIN_SDK_TOKEN_URI
+FIREBASE_ADMIN_SDK_AUTH_PROVIDER_CERT_URL
+FIREBASE_ADMIN_SDK_CLIENT_CERT_URL
+```
+
+Notes:
+- `lib/firebase.js` reads `NEXT_PUBLIC_*` variables for the client SDK.
+- `lib/firebaseAdmin.js` initializes only when `FIREBASE_ADMIN_SDK_PROJECT_ID` and `FIREBASE_ADMIN_SDK_PRIVATE_KEY` exist.
+
+---
+
+## Scripts (from `package.json`)
+
+```
+npm run dev    # next dev
+npm run build  # next build
+npm run start  # next start
+npm run deploy # vercel --prod
+```
+
+---
+
+## Pages (user-facing)
+
+The main routes found in `pages/`:
+
+- / (index)
+- /about
+- /assign-mediator
+- /find-venue
+- /help
+- /legal
+- /login
+- /manage-reports
+- /manage-venues
+- /my-reports
+- /profile
+- /provide-feedback
+- /register
+- /report-conflict
+- /resolve-conflict
+- /resources
+- /schedule-meeting
+- /settings
+- /track-progress
+- /users
+
+---
+
+## API routes (server endpoints)
+
+Located under `pages/api/`:
+
+- /api/assignments
+- /api/auth
+- /api/clients
+- /api/conflicts
+- /api/feedback
+- /api/health
+- /api/schedule
+- /api/users
+- /api/venues
+
+---
+
+## Key folders and files
+
+- [components](components): `AuthContext.js`, `Layout.js`, `LogoutConfirmation.js`, `Sidebar.js`
+- [lib](lib): helpers and Firebase clients (`firebase.js`, `firebaseAdmin.js`, `firestore.js`, `auth.js`, `apiErrors.js`)
+- [data](data): static JSON used for seeding/fixtures (`conflicts.json`, `users.json`, `venues.json`)
+- [styles](styles): `globals.css`, `Home.module.css`
+- `middleware.js` + `middleware.config.js`: route protection and public route configuration
+- `next.config.js`, `vercel.json`: framework & deployment configuration
+
+---
+
+## Middleware & Auth Behavior
+
+- `middleware.config.js` sets the matcher and `PUBLIC_ROUTES`.
+- `middleware.js` enforces authentication for protected routes and redirects unauthenticated users to `/login`.
+- Role-based route lists are declared in `middleware.config.js` (admin, mediator, staff mappings).
 
 ---
 
 ## Deployment
 
-Use Vercel:
-
-```bash
-npm install -g vercel
-vercel
-vercel --prod
-```
-
-Live URL:
-
-- `https://ccrsystem.vercel.app`
+- This repo is prepared for Vercel. Use `npm run deploy` (invokes `vercel --prod`) or deploy from the Vercel dashboard.
+- Make sure production environment variables are added in Vercel (client + Admin variables if needed).
 
 ---
 
-## Notes
+## Changelog (update)
 
-- `/register` is public for new users.
-- Removed the sidebar quick actions for `New Report` and `Find Venue`.
-- Demo credentials are for development only.
+- 2026-05-22: Documentation updated to reflect current project files, pages, API routes, env variables, and middleware behavior.
 
 ---
 
-## Demo Credentials
+If you'd like, I can also:
+- Add an `.env.example` file populated with required keys (no secrets), or
+- Generate a short README with setup steps and common troubleshooting commands.
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@elupun.com | admin123 |
-| Mediator | mediator@elupun.com | mediator123 |
-| Staff | staff@elupun.com | staff123 |
-
-> Remove demo credentials before production.
-
----
-
-## Troubleshooting
-
-- Confirm Firebase environment variables
-- Restart the dev server after updating `.env.local`
-- Review Vercel build logs for deployment issues
-
----
-
-## Project Structure
-
-```
-components/        # UI components
-pages/             # Next.js pages and API routes
-styles/            # CSS and layout styling
-lib/               # Firebase and auth helpers
-public/            # Static assets
-.env.local.example # Environment template
-package.json       # Scripts and dependencies
-middleware.js      # Route protection middleware
-README.md          # Project documentation
-```
